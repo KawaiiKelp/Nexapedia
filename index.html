@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexapedia - AI 지식 백과사전</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 헤더 -->
+  <header class="app-header">
+    <div class="logo">
+      <!-- 로고나 텍스트 -->
+      <span class="logo-mark"><img src="./nexapedia_logo.png" width="70px"></span>
+      <span class="logo-text">Nexapedia</span>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn" data-view="home">검색</button>
+      <button class="nav-btn" data-view="compare">비교</button>
+      <button class="nav-btn" data-view="history">기록</button>
+    </nav>
+  </header>
+
+  <!-- 메인 레이아웃 -->
+  <main class="layout">
+    <!-- 왼쪽: 검색 / 옵션 -->
+    <aside class="sidebar">
+      <!-- 단일 개념 검색 -->
+      <section class="panel" id="search-panel">
+        <h2>개념 검색</h2>
+        <label for="query-input" class="field-label">검색어</label>
+        <input
+          id="query-input"
+          type="text"
+          placeholder="예: 증기기관, 플루토늄, 열역학 제2법칙"
+        />
+
+        <label class="field-label">설명 난이도</label>
+        <div class="level-group">
+          <label>
+            <input type="radio" name="level" value="basic" checked />
+            초급
+          </label>
+          <label>
+            <input type="radio" name="level" value="intermediate" />
+            중급
+          </label>
+          <label>
+            <input type="radio" name="level" value="advanced" />
+            고급
+          </label>
+        </div>
+
+        <button id="search-btn" class="primary-btn">검색</button>
+      </section>
+
+      <!-- 비교 검색 -->
+      <section class="panel" id="compare-panel">
+        <h2>비교 검색</h2>
+        <label for="compare-a" class="field-label">개념 A</label>
+        <input id="compare-a" type="text" placeholder="예: 증기기관" />
+
+        <label for="compare-b" class="field-label">개념 B</label>
+        <input id="compare-b" type="text" placeholder="예: 증기 터빈" />
+
+        <button id="compare-btn" class="secondary-btn">비교하기</button>
+      </section>
+
+      <!-- 옵션 (시각화 등) -->
+      <section class="panel" id="options-panel">
+        <h2>옵션</h2>
+        <label>
+          <input type="checkbox" id="opt-diagram" checked />
+          구조도 / 다이어그램 생성
+        </label>
+        <label>
+          <input type="checkbox" id="opt-timeline" />
+          타임라인 생성
+        </label>
+        <label>
+          <input type="checkbox" id="opt-related" checked />
+          연관 개념 추천
+        </label>
+      </section>
+    </aside>
+
+    <!-- 오른쪽: 결과 영역 -->
+    <section class="content">
+      <!-- 기본 안내 / 검색 전 화면 -->
+      <section id="welcome-view">
+        <h1>Nexapedia - AI와 함께 배우는 지식 백과사전</h1>
+        <p class="subtitle">
+          어렵고 흩어져 있는 지식을 요약·비교·구조화해서 보여주는 서비스입니다.
+        </p>
+        <ul class="hint-list">
+          <li>위 왼쪽에서 개념을 검색하면 요약과 난이도별 설명이 표시됩니다.</li>
+          <li>두 개념을 입력하고 비교하면 표와 구조화된 차이를 볼 수 있습니다.</li>
+          <li>옵션에서 구조도, 타임라인, 연관 개념 표시 여부를 바꿀 수 있습니다.</li>
+        </ul>
+      </section>
+
+      <!-- 단일 개념 결과 -->
+      <section id="result-view" class="result-view hidden">
+        <!-- 검색어 + 액션 -->
+        <header class="result-header">
+          <h2 id="result-title">검색 결과</h2>
+          <div class="result-actions">
+            <button id="save-favorite-btn">★ 즐겨찾기</button>
+          </div>
+        </header>
+
+        <!-- 요약 카드 -->
+        <article class="card" id="summary-card">
+          <h3>한 줄 요약</h3>
+          <p id="summary-text">여기에 요약 결과가 들어갑니다.</p>
+        </article>
+
+        <!-- 난이도별 설명 -->
+        <section class="card" id="levels-card">
+          <h3>난이도별 설명</h3>
+          <div class="levels-container">
+            <article class="level-explanation">
+              <h4>초급</h4>
+              <p id="level-basic-text">초급 설명 영역</p>
+            </article>
+            <article class="level-explanation">
+              <h4>중급</h4>
+              <p id="level-intermediate-text">중급 설명 영역</p>
+            </article>
+            <article class="level-explanation">
+              <h4>고급</h4>
+              <p id="level-advanced-text">고급 설명 영역</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- 구조화 / 관계도 -->
+        <section class="card" id="structure-card">
+          <h3>구조화 & 관계</h3>
+          <div id="structure-graph">
+            <!-- 나중에 다이어그램 / 마인드맵 넣을 영역 -->
+            <p class="placeholder">
+              여기에는 개념 관계도, 흐름도 등이 표시됩니다.
+            </p>
+          </div>
+        </section>
+
+        <!-- 연관 개념 -->
+        <section class="card" id="related-card">
+          <h3>연관 개념</h3>
+          <ul id="related-list" class="chip-list">
+            <!-- JS로 관련 키워드 chip 형태로 추가 -->
+          </ul>
+        </section>
+      </section>
+
+      <!-- 비교 결과 -->
+      <section id="compare-view" class="result-view hidden">
+        <header class="result-header">
+          <h2>비교 결과</h2>
+        </header>
+
+        <!-- 비교 요약 -->
+        <article class="card">
+          <h3>요약</h3>
+          <p id="compare-summary-text">두 개념의 차이 요약 영역</p>
+        </article>
+
+        <!-- 비교 표 -->
+        <section class="card">
+          <h3>비교 표</h3>
+          <div class="table-wrapper">
+            <table id="compare-table">
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th id="th-a">개념 A</th>
+                  <th id="th-b">개념 B</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- JS로 행 추가 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 구조 비교 / 관계도 -->
+        <section class="card">
+          <h3>구조 비교 / 흐름도</h3>
+          <div id="compare-structure-graph">
+            <p class="placeholder">
+              두 개념의 관계/차이를 시각화하는 영역입니다.
+            </p>
+          </div>
+        </section>
+      </section>
+
+      <!-- 검색 기록 / 즐겨찾기 -->
+      <section id="history-view" class="result-view hidden">
+        <header class="result-header">
+          <h2>검색 기록 & 즐겨찾기</h2>
+        </header>
+
+        <section class="card">
+          <h3>최근 검색</h3>
+          <ul id="recent-list" class="list">
+            <!-- JS로 최근 검색어 추가 -->
+          </ul>
+        </section>
+
+        <section class="card">
+          <h3>즐겨찾기</h3>
+          <ul id="favorite-list" class="list">
+            <!-- JS로 즐겨찾기 추가 -->
+          </ul>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="app-footer">
+    <p>© 2025 AI 지식 백과사전 프로젝트</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
