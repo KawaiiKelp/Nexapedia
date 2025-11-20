@@ -4,6 +4,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
 
+* {
+    font-family: 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
 :root {
     /* Deep Blue 계열 강조색 */
     --color-primary: #3b5998; /* 네이비 블루 */
@@ -18,7 +26,6 @@
 }
 
 body {
-    font-family: 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
     background-color: var(--color-background);
@@ -103,7 +110,6 @@ body {
 }
 
 .nav-btn {
-    font-family: 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     /* 버튼의 기본 스타일 초기화 및 크기 조절 */
     height: 35px; /* 버튼의 높이를 명확히 지정 */
     padding: 0 18px; /* 좌우 패딩으로 너비 확보 */
@@ -127,7 +133,7 @@ body {
     display: flex;
     gap: 25px;
     /* 헤더의 높이만큼 상단 여백 추가 */
-    margin: 80px auto 0 auto; /* 헤더 높이에 맞춰 조정 */
+    margin: 100px auto 0 auto; /* 헤더 높이에 맞춰 조정 */
     width: 60%;
     max-width: 60%;
 }
@@ -218,6 +224,7 @@ input[type="text"], input[type="search"] {
     background-color: var(--color-primary);
     color: white;
     font-size: 1.1em;
+    transition: background-color 0.3s;
 }
 
 .primary-btn:hover {
@@ -229,10 +236,12 @@ input[type="text"], input[type="search"] {
     color: var(--color-primary);
     border: 2px solid var(--color-primary);
     font-size: 1.1em;
+    margin-top: 1.1em;
+    transition: background-color 0.3s;
 }
 
 .secondary-btn:hover {
-    background-color: #f0f3ff;
+    background-color: #e7ebff;
 }
 
 .levels-container {
@@ -346,6 +355,32 @@ input[type="text"], input[type="search"] {
 
 .hint-list li {
     margin-bottom: 8px;
+}
+
+/* 연관 개념 목록 스타일 */
+.chip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chip {
+    background-color: #e0f7fa;
+    color: var(--color-primary-dark);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: 1px solid #b2ebf2;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chip:hover {
+    background-color: #b2ebf2;
 }
 
 .app-footer {
