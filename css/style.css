@@ -1,30 +1,35 @@
-/*  =========================== 
-    1. 기본 색상 및 폰트 재정의
+/* =========================== 
+    1. 기본 설정 및 변수 정의 (Global Styles & Variables)
     =========================== */
 
+/* Noto Sans KR 폰트 로드 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
 
+/* 모든 요소에 폰트 적용 */
 * {
     font-family: 'Noto Sans KR', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* 부드러운 스크롤 효과 적용 */
 html {
     scroll-behavior: smooth;
 }
 
+/* CSS 변수 (Custom Properties) 정의 */
 :root {
-    /* Deep Blue 계열 강조색 */
-    --color-primary: #3b5998; /* 네이비 블루 */
-    --color-primary-dark: #2d4373;
-    --color-secondary: #007bff; /* 링크/보조 강조색 */
+    /* ✨ Deep Blue 계열 강조색 (Primary Colors) */
+    --color-primary: #3b5998; /* 메인 강조색 (네이비 블루) */
+    --color-primary-dark: #2d4373; /* 메인 강조색의 어두운 버전 */
+    --color-secondary: #007bff; /* 링크, 보조 강조색 (밝은 파랑) */
 
-    /* 배경 및 텍스트 색상 */
-    --color-background: #f8f9fa; /* 매우 밝은 회색/흰색 */
-    --color-card-bg: #ffffff;
-    --color-text-dark: #212529; /* 거의 검정 */
-    --color-border: #e9ecef;
+    /* 📄 배경 및 텍스트 색상 (Background & Text Colors) */
+    --color-background: #f8f9fa; /* 전체 배경색 (매우 밝은 회색) */
+    --color-card-bg: #ffffff; /* 카드 및 헤더 배경색 (흰색) */
+    --color-text-dark: #212529; /* 기본 텍스트 색상 (거의 검정) */
+    --color-border: #e9ecef; /* 경계선/구분선 색상 (옅은 회색) */
 }
 
+/* body 기본 스타일 */
 body {
     margin: 0;
     padding: 0;
@@ -32,133 +37,138 @@ body {
     color: var(--color-text-dark);
 }
 
-/*  ===========================
-    2. 헤더 디자인 수정
+/* ===========================
+    2. 헤더 디자인 (Header Design)
     =========================== */
 
 .app-header {
-    width: 60%; 
+    width: 60%; /* 본문 레이아웃과 너비 맞춤 */
     height: 80px;
     
     background-color: var(--color-card-bg);
     border-bottom: 1px solid var(--color-border);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* 옅은 하단 그림자 */
 
-    /* 고정 헤더 중앙 정렬 표준 방식으로 복원 */
+    /* 헤더를 상단에 고정하고 중앙 정렬 */
     position: fixed;
     top: 0; 
-    
-    /* ❗ 중앙 정렬 표준 방식으로 복원 ❗ */
     left: 50%;
     transform: translateX(-50%); 
     
-    z-index: 1000;
+    z-index: 1000; /* 다른 요소 위에 표시 */
     
-    /* Flexbox 및 padding 유지 */
+    /* Flexbox를 사용하여 내부 요소 정렬 */
     display: flex;
-    align-items: center; 
-    justify-content: space-between;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: space-between; /* 양 끝 정렬 */
     padding: 0 20px;
 }
 
-/*  ===========================
-    3. 로고 및 내비게이션
+/* ===========================
+    3. 로고 및 내비게이션 (Logo & Navigation)
     =========================== */
 
 .logo {
-    width: 250px;
+    width: 250px; /* 로고 영역 너비 */
     height: 100%;
 }
 
 .logo-link {
-    /* <a> 태그를 flex 컨테이너로 만듦 */
+    /* <a> 태그를 Flex 컨테이너로 설정 */
     display: flex;
-    /* 텍스트와 이미지를 세로 중앙에 정렬 */
-    align-items: center;
-    /* <a> 태그가 .logo의 높이를 상속받게 함 */
+    align-items: center; /* 세로 중앙 정렬 */
     height: 100%;
     color: var(--color-text-dark);
-    text-decoration: none;
+    text-decoration: none; /* 밑줄 제거 */
 }
 
 .logo-mark {
-    margin-right: 8px; /* 로고 이미지 <-> 텍스트 사이 간격 */
-    /* 로고 이미지 자체가 정렬을 방해하지 않도록 정렬 기준을 명확히 */
+    margin-right: 8px; /* 로고 이미지와 텍스트 사이 간격 */
     display: flex;
     align-items: center;
 }
 
 .logo-text {
-    font-size: 1.8em; /* 로고 텍스트 크기 증가 */
-    font-weight: 900;
+    font-size: 1.8em; /* 로고 텍스트 크기 */
+    font-weight: 900; /* 매우 굵게 */
     color: var(--color-primary-dark);
 }
 
-/* 내비게이션 버튼 */
-
+/* 내비게이션 영역 */
 .nav {
     display: flex; /* 버튼들을 가로로 나열 */
     gap: 10px; /* 버튼들 사이의 간격 */
     align-self: center;
 }
 
+/* 활성 내비게이션 버튼 스타일 */
 .nav-btn.active {
     background-color: var(--color-primary);
     color: var(--color-card-bg);
     border-color: var(--color-primary);
-    box-shadow: 0 2px 4px rgba(59, 89, 152, 0.3); /* 그림자 추가 */
+    box-shadow: 0 2px 4px rgba(59, 89, 152, 0.3); /* 활성 상태 그림자 */
 }
 
+/* 기본 내비게이션 버튼 스타일 */
 .nav-btn {
-    /* 버튼의 기본 스타일 초기화 및 크기 조절 */
-    height: 35px; /* 버튼의 높이를 명확히 지정 */
-    padding: 0 18px; /* 좌우 패딩으로 너비 확보 */
+    height: 35px;
+    padding: 0 18px; 
 
-    /* 시각적 디자인 추가 */
-    background-color: #f0f0f0; /* 배경색 투명 or 흰색 */
-    border: 1px solid var(--color-border); /* 옅은 테두리 */
-    border-radius: 6px; /* 모서리 둥글게 */
+    background-color: #f0f0f0;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 600;
     color: var(--color-text-dark);
-    transition: all 0.2s;
+    transition: all 0.2s; /* 부드러운 전환 효과 */
 }
 
+/* 호버 시 스타일 (활성 버튼 제외) */
 .nav-btn:hover:not(.active) {
-    background-color: #e0e0e0; /* 호버 시 색상 변경 */
+    background-color: #e0e0e0;
 }
+
+/* ===========================
+    4. 메인 레이아웃 (Main Layout)
+    =========================== */
 
 .layout {
     display: flex;
-    gap: 25px;
-    /* 헤더의 높이만큼 상단 여백 추가 */
-    margin: 100px auto 0 auto; /* 헤더 높이에 맞춰 조정 */
-    width: 60%;
+    gap: 25px; /* 사이드바와 콘텐츠 사이 간격 */
+    /* 고정된 헤더(80px)를 피하기 위한 상단 여백 (100px) */
+    margin: 100px auto 0 auto; 
+    width: 60%; /* 전체 레이아웃 너비 */
     max-width: 60%;
+    /* 뷰 전환을 위해 position: relative 설정 */
+    position: relative; 
 }
 
+/* 사이드바 영역 */
 .sidebar {
-    width: 300px;
-    flex-shrink: 0;
+    width: 300px; /* 고정 너비 */
+    flex-shrink: 0; /* 너비가 줄어들지 않도록 설정 */
+    /* 사이드바는 전환 효과를 적용하지 않으므로 z-index 높게 설정 */
+    z-index: 10;
 }
 
+/* 콘텐츠 영역 (결과 표시) */
 .content {
-    flex-grow: 1;
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
 }
 
-/*  ===========================
-    4. UI 요소 (패널 & 카드)
+/* ===========================
+    5. UI 요소 (패널 & 카드, 버튼)
     =========================== */
 
-/* 사이드바 패널 */
+/* 5.1. 사이드바 패널 (Panel) 스타일 */
 .panel {
     background-color: var(--color-card-bg);
     border: 1px solid var(--color-border);
-    border-radius: 10px; /* 더 둥글게 */
+    border-radius: 10px; 
     padding: 25px;
     margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 그림자를 더 깊게 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 눈에 띄는 그림자 */
 }
 
 .panel h2 {
@@ -169,6 +179,7 @@ body {
     margin-bottom: 20px;
 }
 
+/* 결과 뷰 헤더 (제목 + 저장 버튼 등) */
 .result-header {
     display: flex;
     justify-content: space-between;
@@ -176,14 +187,14 @@ body {
     margin-bottom: 25px;
 }
 
-/* 결과 영역 카드 */
+/* 5.2. 결과 영역 카드 (Card) 스타일 */
 .card {
     background-color: var(--color-card-bg);
-    border: none; /* 테두리 제거 */
+    border: none;
     border-radius: 10px;
     padding: 30px;
     margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 눈에 띄는 그림자 */
 }
 
 .card h3 {
@@ -195,19 +206,20 @@ body {
     margin-bottom: 15px;
 }
 
+/* 검색 기록 뷰의 메인 제목 */
 #history-view .result-header h2 {
     font-size: 2em;
     margin-top: 0;
 }
 
-/* 폼 입력창 */
+/* 5.3. 폼 입력창 (Input) 스타일 */
 input[type="text"], input[type="search"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 1em;
-    box-sizing: border-box;
+    box-sizing: border-box; /* 패딩과 테두리가 너비에 포함되도록 설정 */
 }
 
 .field-label {
@@ -219,8 +231,9 @@ input[type="text"], input[type="search"] {
     color: var(--color-text-dark);
 }
 
-/* 주요 버튼 스타일 */
+/* 5.4. 버튼 (Button) 스타일 */
 .primary-btn {
+    /* 메인 액션 버튼 */
     background-color: var(--color-primary);
     color: white;
     font-size: 1.1em;
@@ -232,6 +245,7 @@ input[type="text"], input[type="search"] {
 }
 
 .secondary-btn {
+    /* 보조 액션 버튼 (예: 재검색, 삭제) */
     background-color: var(--color-card-bg);
     color: var(--color-primary);
     border: 2px solid var(--color-primary);
@@ -241,20 +255,26 @@ input[type="text"], input[type="search"] {
 }
 
 .secondary-btn:hover {
-    background-color: #e7ebff;
+    background-color: #e7ebff; /* 옅은 파란색 호버 효과 */
 }
 
+/* ===========================
+    6. 검색 결과 상세 요소 스타일
+    =========================== */
+
+/* 난이도별 설명 컨테이너 */
 .levels-container {
     display: flex;
     flex-direction: column;
     gap: 25px;
 }
 
+/* 개별 난이도 설명 블록 */
 .level-explanation {
     padding: 15px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: var(--color-background);
+    background-color: var(--color-background); /* 카드 배경과 구분되는 색상 */
 }
 
 .level-explanation h4 {
@@ -282,7 +302,7 @@ input[type="text"], input[type="search"] {
     font-weight: 500;
 }
 
-/* 옵션 패널 내부 스타일 */
+/* 옵션 패널 내부 스타일 (체크박스) */
 #options-panel label {
     display: flex;
     align-items: center;
@@ -291,15 +311,20 @@ input[type="text"], input[type="search"] {
     font-weight: 500;
 }
 
+/* ===========================
+    7. 비교 테이블 (Comparison Table)
+    =========================== */
+
+/* 테이블이 화면을 벗어날 경우 스크롤 가능하게 함 */
 .table-wrapper {
     overflow-x: auto;
 }
 
 #compare-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* 셀 경계선 병합 */
     font-size: 0.95em;
-    table-layout: fixed;
+    table-layout: fixed; /* 고정 레이아웃으로 셀 너비 일정하게 유지 */
 }
 /* 테이블 헤더 */
 #compare-table thead th {
@@ -314,16 +339,17 @@ input[type="text"], input[type="search"] {
 #compare-table tbody td {
     padding: 12px 10px;
     border-bottom: 1px solid var(--color-border);
-    vertical-align: top;
+    vertical-align: top; /* 텍스트를 위쪽으로 정렬 */
     line-height: 1.5;
 }
 
+/* 짝수 행 배경색 지정 (가독성 향상) */
 #compare-table tbody tr:nth-child(even) {
     background-color: #f3f3f3;
 }
 
+/* 즐겨찾기 저장 버튼 (결과 뷰 내부) */
 #save-favorite-btn {
-    /* 버튼 기본 스타일 재설정 */
     background: none;
     border: 1px solid var(--color-primary);
     color: var(--color-primary);
@@ -333,6 +359,18 @@ input[type="text"], input[type="search"] {
     font-weight: 600;
     transition: all 0.2s;
 }
+
+/* 즐겨찾기 버튼 - 즐겨찾기 등록된 상태 */
+#save-favorite-btn.favorited {
+    background-color: #ffeb3b; /* 강조색 (노랑) */
+    color: var(--color-text-dark);
+    border-color: #ffc107;
+}
+
+
+/* ===========================
+    8. 환영/도움말 뷰 (Welcome View)
+    =========================== */
 
 #welcome-view h1 {
     font-size: 2em;
@@ -357,21 +395,26 @@ input[type="text"], input[type="search"] {
     margin-bottom: 8px;
 }
 
-/* 연관 개념 목록 스타일 */
+/* ===========================
+    9. 연관 개념 (Chip List)
+    =========================== */
+
+/* 연관 개념 목록 컨테이너 */
 .chip-list {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* 요소가 넘칠 경우 줄 바꿈 */
     gap: 10px;
 }
 
+/* 개별 연관 개념 칩 */
 .chip {
-    background-color: #e0f7fa;
+    background-color: #e0f7fa; /* 옅은 하늘색 배경 */
     color: var(--color-primary-dark);
     padding: 8px 15px;
-    border-radius: 20px;
+    border-radius: 20px; /* 둥근 모서리 */
     font-size: 0.9em;
     font-weight: 600;
     border: 1px solid #b2ebf2;
@@ -380,9 +423,14 @@ input[type="text"], input[type="search"] {
 }
 
 .chip:hover {
-    background-color: #b2ebf2;
+    background-color: #b2ebf2; /* 진한 하늘색 호버 효과 */
 }
 
+/* ===========================
+    10. 기타 유틸리티 (Utility & Footer)
+    =========================== */
+
+/* 푸터 */
 .app-footer {
     max-width: 60%;
     margin: 0 auto; 
@@ -391,4 +439,89 @@ input[type="text"], input[type="search"] {
     color: #999;
     border-top: 1px solid var(--color-border); 
     padding-top: 15px;
+    padding-bottom: 30px; /* 하단 여백 추가 */
+}
+
+/* 검색 기록/즐겨찾기 목록 컨테이너 */
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 개별 검색 기록/즐겨찾기 항목 */
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--color-border);
+    font-size: 1.0em;
+}
+
+.history-item:last-child {
+    border-bottom: none; /* 마지막 항목의 하단 선 제거 */
+}
+
+.history-query {
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+
+/* 기록/즐겨찾기 뷰 내부 버튼 */
+.history-item .secondary-btn {
+    /* 재검색/삭제 버튼 스타일 미세 조정 */
+    margin-top: 0;
+    padding: 5px 10px;
+    font-size: 0.85em;
+    height: auto;
+}
+
+/* 내용이 없을 때 표시되는 플레이스홀더 텍스트 */
+.placeholder {
+    color: #888;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+
+/* ===========================
+    11. 뷰 전환 애니메이션 (View Transition)
+    =========================== */
+
+/* 모든 뷰 섹션에 기본 트랜지션 적용 */
+.layout section[id$="-view"] {
+    /* 0.3초 동안 opacity, height, margin, visibility를 부드럽게 전환 */
+    transition: opacity 0.3s ease-in-out, 
+                height 0.3s ease-in-out, 
+                margin 0.3s ease-in-out, 
+                visibility 0.3s ease-in-out;
+    overflow: hidden; /* 높이가 줄어들 때 내용이 잘리도록 설정 */
+    flex-grow: 1; /* 표시될 때는 레이아웃 공간을 차지하도록 합니다. */
+    width: 100%; /* 너비는 100%를 차지하게 설정 */
+}
+
+/* 숨겨진(hidden) 뷰의 스타일 (애니메이션이 작동하는 핵심) */
+/* display: none 대신 opacity와 height를 사용합니다. */
+.layout section[id$="-view"].hidden {
+    opacity: 0 !important;
+    height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    visibility: hidden !important; 
+}
+/* 기존 .hidden 클래스도 만약을 위해 opacity와 visibility만 적용합니다. */
+.hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* 표시되는 뷰의 스타일 (transition이 적용되는 기본 상태) */
+.layout section[id$="-view"]:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+    /* height와 margin은 콘텐츠에 따라 자동으로 계산되게 둡니다. */
+    /* flex-grow: 1이 적용되어 공간을 차지합니다. */
 }

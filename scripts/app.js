@@ -1,42 +1,213 @@
 /**
- * 파일: app.js의 내용 (HTML <script> 태그 내부에 삽입)
+ * 파일: app.js
+ * 설명: Nexapedia의 싱글 페이지 애플리케이션(SPA) 및 핵심 기능을 제어하는 스크립트
+ * 최종 수정 내용:
+ * 1. AI 연동을 위해 단일 검색/비교 로직을 비동기(async/await) fetch 로직으로 변경.
+ * 2. HTML ID ('related-list' vs 'related-chips') 불일치 및 변수 선언 오류 (const chip) 수정 완료.
+ * 3. 뷰 전환 시 발생했던 'clickedButton is null' 오류에 대한 안전 장치 및 로직 수정 완료.
  */
-document.addEventListener('DOMContentLoaded', () => {
-    const navButtons = document.querySelectorAll('.nav-btn');
 
-    // 모든 뷰 섹션의 ID를 배열로 정의 (SPA 전환 대상)
+document.addEventListener('DOMContentLoaded', () => {
+    // ===================================
+    // 1. DOM 요소 선택 및 상수 정의
+    // ===================================
+
+    // 네비게이션 버튼 (SPA 전환용)
+    const navButtons = document.querySelectorAll('.nav-btn');
+    // 모든 뷰 섹션의 ID 정의 (SPA 전환 대상)
     const viewIds = ['welcome-view', 'result-view', 'compare-view', 'history-view'];
 
-    // 비교 기능 요소 (기존)
+    // LocalStorage Key 상수
+    const HISTORY_KEY = 'nexapediaHistory';
+    const FAVORITE_KEY = 'nexapediaFavorites';
+
+    // 1.1. 비교 기능 관련 요소
     const compareBtn = document.getElementById('compare-btn');
     const compareAInput = document.getElementById('compare-a');
     const compareBInput = document.getElementById('compare-b');
-    const thA = document.getElementById('th-a');
-    const thB = document.getElementById('th-b');
+    const thA = document.getElementById('th-a'); 
+    const thB = document.getElementById('th-b'); 
     const compareTableBody = document.querySelector('#compare-table tbody');
+    const compareSummaryText = document.getElementById('compare-summary-text'); 
 
-    // 단일 검색 기능 요소 (신규)
+    // 1.2. 단일 검색 기능 관련 요소
     const searchBtn = document.getElementById('search-btn');
     const queryInput = document.getElementById('query-input');
     const resultTitle = document.getElementById('result-title');
     const summaryText = document.getElementById('summary-text');
+    // 난이도별 설명 <p> 태그
     const levelBasicText = document.getElementById('level-basic-text');
     const levelIntermediateText = document.getElementById('level-intermediate-text');
     const levelAdvancedText = document.getElementById('level-advanced-text');
-    const levelsContainer = document.getElementById('levels-card'); // 난이도 카드를 통째로 숨기기 위해
+    
+    // 난이도 라디오 버튼 전체 선택
+    const levelRadios = document.querySelectorAll('input[name="level"]'); 
+
+    // 1.3. 옵션 제어 관련 요소 (단일 검색 결과의 보조 카드)
+    const structureCard = document.getElementById('structure-card');
+    const timelineCard = document.getElementById('timeline-card');
+    const relatedCard = document.getElementById('related-card'); // 연관 개념 카드
+    // ✅ 수정: HTML의 id="related-list"에 맞춰 DOM 요소를 가져옵니다.
+    const chipListElement = document.getElementById('related-list'); 
+
+    // 옵션 체크박스
+    const showStructureCheckbox = document.getElementById('opt-diagram');
+    const showTimelineCheckbox = document.getElementById('opt-timeline');
+    const showRelatedCheckbox = document.getElementById('opt-related');
+
+    // 1.4. 기록/즐겨찾기 관련 요소
+    const recentList = document.getElementById('recent-list');
+    const favoriteList = document.getElementById('favorite-list');
+    const saveFavoriteBtn = document.getElementById('save-favorite-btn');
+
+    // ===================================
+    // 2. 검색 기록 및 즐겨찾기 관리 유틸리티
+    // ===================================
+
+    function getLocalStorage(key, defaultValue) {
+        try {
+            const json = localStorage.getItem(key);
+            return json ? JSON.parse(json) : defaultValue;
+        } catch (e) {
+            console.error("Error reading localStorage", e);
+            return defaultValue;
+        }
+    }
+
+    function setLocalStorage(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.error("Error writing localStorage", e);
+        }
+    }
+
+    function addSearchHistory(query) {
+        let history = getLocalStorage(HISTORY_KEY, []);
+        history = history.filter(item => item !== query);
+        history.unshift(query);
+        if (history.length > 5) {
+            history = history.slice(0, 5);
+        }
+        setLocalStorage(HISTORY_KEY, history);
+        if (document.getElementById('history-view').classList.contains('hidden') === false) {
+            renderHistory();
+        }
+    }
+
+    function updateFavoriteButtonState(query) {
+        const favorites = getLocalStorage(FAVORITE_KEY, []);
+        if (favorites.includes(query)) {
+            saveFavoriteBtn.textContent = '🌟 즐겨찾기에서 제거';
+            saveFavoriteBtn.classList.add('favorited');
+        } else {
+            saveFavoriteBtn.textContent = '★ 즐겨찾기에 추가';
+            saveFavoriteBtn.classList.remove('favorited');
+        }
+    }
+
+    function removeFavorite(queryToRemove) {
+        let favorites = getLocalStorage(FAVORITE_KEY, []); 
+        favorites = favorites.filter(item => item !== queryToRemove);
+        setLocalStorage(FAVORITE_KEY, favorites);
+        alert(`"${queryToRemove}"가 즐겨찾기에서 제거되었습니다.`);
+        renderHistory();
+
+        if (queryInput.value.trim() === queryToRemove) {
+            updateFavoriteButtonState(queryToRemove);
+        }
+    }
+
+    function createHistoryListItem(query, isFavorite = false) {
+        const li = document.createElement('li');
+        li.classList.add('history-item');
+        
+        li.innerHTML = `
+            <span class="history-query">${query}</span>
+            ${isFavorite
+                ? `<button class="remove-btn secondary-btn" data-query="${query}" data-type="favorite">❌</button>`
+                : `<button class="search-again-btn secondary-btn" data-query="${query}">재검색</button>`
+            }
+        `;
+
+        li.querySelector('button').addEventListener('click', (event) => {
+            const targetQuery = event.currentTarget.getAttribute('data-query');
+            const dataType = event.currentTarget.getAttribute('data-type');
+
+            if (dataType === 'favorite') {
+                removeFavorite(targetQuery);
+            } else {
+                queryInput.value = targetQuery;
+                document.getElementById('search-btn').click();
+            }
+        });
+
+        return li;
+    }
+
+    function renderHistory() {
+        const recent = getLocalStorage(HISTORY_KEY, []);
+        const favorites = getLocalStorage(FAVORITE_KEY, []);
+
+        recentList.innerHTML = '';
+        if (recent.length === 0) {
+            recentList.innerHTML = '<li class="placeholder">최근 검색 기록이 없습니다.</li>';
+        } else {
+            recent.forEach(query => {
+                recentList.appendChild(createHistoryListItem(query, false));
+            });
+        }
+
+        favoriteList.innerHTML = '';
+        if (favorites.length === 0) {
+            favoriteList.innerHTML = '<li class="placeholder">즐겨찾기 항목이 없습니다.</li>';
+        } else {
+            favorites.forEach(query => {
+                favoriteList.appendChild(createHistoryListItem(query, true));
+            });
+        }
+    }
+
+    function handleFavoriteClick() {
+        const query = queryInput.value.trim();
+        if (!query) {
+            alert('즐겨찾기에 저장할 검색어가 없습니다.');
+            return;
+        }
+
+        let favorites = getLocalStorage(FAVORITE_KEY, []);
+        const isFavorite = favorites.includes(query);
+
+        if (isFavorite) {
+            favorites = favorites.filter((item => item !== query));
+            alert(`"${query}"가 즐겨찾기에서 제거되었습니다.`);
+        } else {
+            favorites.push(query);
+            alert(`"${query}"가 즐겨찾기에서 저장되었습니다.`);
+        }
+
+        setLocalStorage(FAVORITE_KEY, favorites);
+        updateFavoriteButtonState(query); 
+    }
+
+    // ===================================
+    // 3. SPA 뷰 전환 로직
+    // ===================================
 
     /**
-     * 클릭된 버튼을 활성화하고 해당하는 뷰를 표시/숨김 처리하는 함수
-     * @param {Element} clickedButton - 클릭된 네비게이션 버튼
+     * 클릭된 버튼을 활성화하고 해당하는 뷰를 표시/숨김 처리하는 함수 (SPA 핵심)
      */
     function handleNavClick(clickedButton) {
+        // ✅ 안전 장치 추가: 버튼이 null일 경우 에러 방지
+        if (!clickedButton) return; 
+
         // 1. 버튼 활성 클래스 처리
         navButtons.forEach(btn => btn.classList.remove('active'));
         clickedButton.classList.add('active');
-
+        
         // 2. 뷰 전환 로직
         const viewName = clickedButton.getAttribute('data-view');
-
+        
         // 모든 뷰 숨김
         viewIds.forEach(id => {
             const viewElement = document.getElementById(id);
@@ -44,164 +215,255 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 타겟 뷰 표시
-        // 'home' 버튼은 초기 화면인 welcome-view를 표시합니다.
         const targetViewId = (viewName === 'home') ? 'welcome-view' : viewName + '-view';
-
+        
         const targetView = document.getElementById(targetViewId);
         if (targetView) {
             targetView.classList.remove('hidden');
         }
+
+        if (targetViewId === 'history-view') {
+            renderHistory();
+        }
     }
 
 
+    // ===================================
+    // 4. 데이터 렌더링 로직
+    // ===================================
+
     /**
-     * 단일 검색 버튼 클릭 핸들러
+     * 단일 검색 결과를 화면에 렌더링하는 함수
      */
-    function handleSearchClick() {
+    function renderResult(query, data) {
+        resultTitle.textContent = query;
+        summaryText.textContent = data.summary;
+
+        // 난이도별 설명 렌더링
+        levelBasicText.textContent = data.levels.basic || '준비된 설명이 없습니다.';
+        levelIntermediateText.textContent = data.levels.intermediate || '준비된 설명이 없습니다.';
+        levelAdvancedText.textContent = data.levels.advanced || '준비된 설명이 없습니다.';
+
+        // 연관 개념 칩 렌더링
+        chipListElement.innerHTML = '';
+        if (data.related && data.related.length > 0) {
+            data.related.forEach(concept => {
+                // ✅ 수정: 'const'를 추가하여 변수를 명확히 선언
+                const chip = document.createElement('li'); 
+                chip.classList.add('chip');
+                chip.textContent = concept;
+                chip.addEventListener('click', () => {
+                    queryInput.value = concept;
+                    searchBtn.click(); // 칩 클릭 시 재검색
+                });
+                chipListElement.appendChild(chip);
+            });
+            relatedCard.classList.remove('hidden');
+        } else {
+            relatedCard.classList.add('hidden');
+        }
+
+        // 뷰 전환: 결과 화면 표시
+        // 'result' 뷰 버튼이 없으므로 'home' 버튼을 활성화하고 'result-view'를 직접 표시합니다.
+        const homeButton = document.querySelector('.nav-btn[data-view="home"]');
+        if (homeButton) {
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            homeButton.classList.add('active');
+        }
+
+        viewIds.forEach(id => {
+            const viewElement = document.getElementById(id);
+            if (viewElement) viewElement.classList.add('hidden');
+        });
+        const resultView = document.getElementById('result-view');
+        if (resultView) {
+            resultView.classList.remove('hidden');
+        }
+        
+        // 기록 업데이트 및 버튼 상태 업데이트
+        addSearchHistory(query);
+        updateFavoriteButtonState(query);
+    }
+
+    /**
+     * 비교 검색 결과를 화면에 렌더링하는 함수
+     */
+    function renderCompareResult(queryA, queryB, data) {
+        // 테이블 헤더 업데이트
+        thA.textContent = queryA;
+        thB.textContent = queryB;
+
+        // 비교 요약 업데이트
+        compareSummaryText.textContent = data.summary || '두 개념에 대한 상세 비교 및 분석 결과입니다.';
+
+        // 테이블 본문 업데이트
+        compareTableBody.innerHTML = '';
+        
+        // 데이터가 없을 경우 플레이스홀더 표시
+        if (!data.comparison || data.comparison.length === 0) {
+            compareTableBody.innerHTML = `
+                <tr>
+                    <td></td>
+                    <td colspan="2" style="text-align: center; color: #888;">비교할 데이터가 없습니다.</td>
+                </tr>
+            `;
+        } else {
+            data.comparison.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.criteria}</td>
+                    <td>${row.conceptA}</td>
+                    <td>${row.conceptB}</td>
+                `;
+                compareTableBody.appendChild(tr);
+            });
+        }
+        
+        // 뷰 전환: 비교 화면 표시
+        handleNavClick(document.querySelector('.nav-btn[data-view="compare"]'));
+    }
+
+
+    // ===================================
+    // 5. 검색 및 비교 이벤트 핸들러 (AI 연동)
+    // ===================================
+    
+    /** * [✅ AI 연동 로직 복구] 
+     * 단일 개념 검색을 처리하고 결과를 렌더링합니다.
+     */
+    async function handleSearchClick() {
         const query = queryInput.value.trim();
-
-        // 현재 선택된 난이도 값 가져오기
-        const selectedLevel = document.querySelector('input[name="level"]:checked').value;
-
         if (!query) {
             alert('검색어를 입력해 주세요.');
             return;
         }
 
-        // 뷰 전환 : '검색' 탭 활성화 및 결과 뷰 표시
-        const homeNavButton = document.querySelector('.nav-btn[data-view="home"]');
-        if (homeNavButton) {
-            // '검색' 버튼을 활성화하고 결과 뷰를 표시
-            handleNavClick(homeNavButton)
+        searchBtn.textContent = '검색 중...';
+        searchBtn.disabled = true;
+
+        try {
+            // =======================================================
+            // 💡 AI Backend API 호출 (Fetch API) 로직
+            // =======================================================
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    query: query 
+                    // 난이도 정보: document.querySelector('input[name="level"]:checked').value
+                })
+            });
+
+            if (!response.ok) {
+                // HTTP 오류 응답 처리 (예: 백엔드가 켜져 있지 않거나 404/500 에러)
+                throw new Error(`AI API 호출 실패: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            // 데이터 렌더링
+            renderResult(query, data);
+
+        } catch (error) {
+            console.error('검색 중 오류 발생:', error);
+            // 백엔드가 없을 경우 다시 이 메시지가 표시됩니다.
+            alert(`검색 중 오류가 발생했습니다: ${error.message}.`); 
+        } finally {
+            searchBtn.textContent = '검색';
+            searchBtn.disabled = false;
         }
-
-        // welcome-view에서 result-view로 전환
-        document.getElementById('welcome-view').classList.add('hidden');
-        document.getElementById('result-view').classList.remove('hidden');
-
-        // 2. (가상의) 검색 결과 데이터 생성
-        // 실제 AI 응답을 대체하는 임시 데이터
-        const mockResult = createMockConceptData(query);
-
-        // 3. 결과 영역 업데이트
-        resultTitle.textContent = `"${query}" 검색 결과`;
-        summaryText.textContent = mockResult.summary;
-        levelBasicText.textContent = mockResult.levels.basic;
-        levelIntermediateText.textContent = mockResult.levels.intermediate;
-        levelAdvancedText.textContent = mockResult.levels.advanced;
-
-        // 4. 연관 개념 업데이트
-        updateRelatedContents(mockResult.related);
-
-        // 5. 난이도별 설명 표시/숨김 처리 (선택된 난이도만 보여주도록)
-        console.log(`선택된 난이도: ${selectedLevel}`);
     }
 
-    /**
-    * 연관 개념 (Chip)을 동적으로 생성하는 함수
-    * @param {string[]} concepts - 연관 개념 키워드 배열
-    */
-    function updateRelatedContents(concepts) {
-        const relatedList = document.getElementById('related-list');
-        relatedList.innerHTML = ''; // 기존 내용 초기화
 
-        concepts.forEach(concept => {
-            const chip = document.createElement('li');
-            chip.classList.add('chip')
-            chip.textContent = concept;
-            relatedList.appendChild(chip);
-        });
-    }
-
-    /**
-    * 개념에 따른 가상의 데이터를 반환하는 함수
-    */
-    function createMockConceptData(query) {
-        return {
-            summary: `${query}는 ${query}의 핵심 원리를 간결하게 설명한 것입니다. 이는 인공지능이 복잡한 개념을 빠르고 쉽게 이해하도록 돕습니다.`,
-            levels: {
-                basic: `[초급] ${query}는 무엇인가요? 간단히 말해, ${query}는 일상에서 사용하는 도구와 같은 역할을 하며, 매우 기초적인 원리로 작동합니다.`,
-                intermediate: `[중급] ${query}의 구조와 주요 구성 요소는 무엇인가요? ${query}는 A, B, C 세 가지 주요 요소로 구성되어 있으며, 상호작용을 통해 D라는 결과물을 만들어냅니다.`,
-                advanced: `[고급] ${query}의 심층적인 원리 및 현대적 적용 사례는 무엇인가요? ${query}는 X 이론을 기반으로 하며, 현대 산업에서는 Y 분야의 성능 향상에 혁신적으로 기여하고 있습니다.`,
-            },
-            related: [`${query}의 역사`, '유사 개념 1', '응용 분야 2', '핵심 원리']
-        };
-    }
-
-    // 3. 이벤트 리스너 연결
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => handleNavClick(button));
-    });
-
-    compareBtn.addEventListener('click', handleCompareClick);
-    
-    searchBtn.addEventListener('click', handleSearchClick);
-
-    /* 
-    4. 초기 상태 설정
-    */
-
-    const initialButton = document.querySelector('.nav-btn[data-view="home"]');
-    if (initialButton) {// 초기 뷰 설정 로직을 실행하여 '검색' 버튼을 활성화하고 'welcome-view'를 표시
-        handleNavClick(initialButton);
-    }
-
-    /**
-     * 비교 테이블에 행을 추가하는 헬퍼 함수
-     * @param {string} category - 구분 항목 (예: 정의, 역사, 용도)
-     * @param {string} valueA - 개념 A에 대한 설명
-     * @param {string} valueB - 개념 B에 대한 설명
+    /** * [✅ AI 연동 로직 복구] 
+     * 두 개념의 비교 검색을 처리하고 결과를 렌더링합니다.
      */
-    function addCompareTableRow(category, valueA, valueB) {
-        const row = compareTableBody.insertRow();
-        row.innerHTML = `
-            <td>${category}</td>
-            <td>${valueA}</td>
-            <td>${valueB}</td>
-        `;
-    }
+    async function handleCompareClick() {
+        const queryA = compareAInput.value.trim();
+        const queryB = compareBInput.value.trim();
 
-    /**
-     * 비교 버튼 클릭 핸들러
-     */
-    function handleCompareClick() {
-        const termA = compareAInput.value.trim();
-        const termB = compareBInput.value.trim();
-
-        if (!termA || !termB) {
-            alert('비교할 두 가지 개념을 모두 입력해 주세요.');
+        if (!queryA || !queryB) {
+            alert('비교할 두 개의 개념을 모두 입력해 주세요.');
             return;
         }
 
-        // 1. 뷰 전환: '비교' 탭 활성화 및 뷰 표시
-        const compareNavButton = document.querySelector('.nav-btn[data-view="compare"]');
-        if (compareNavButton) {
-            handleNavClick(compareNavButton);
+        compareBtn.textContent = '비교 중...';
+        compareBtn.disabled = true;
+
+        try {
+            // =======================================================
+            // 💡 AI Backend API 호출 (Fetch API) 로직
+            // =======================================================
+            const response = await fetch('/api/compare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    conceptA: queryA, 
+                    conceptB: queryB 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`AI API 호출 실패: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            // 데이터 렌더링
+            renderCompareResult(queryA, queryB, data);
+
+        } catch (error) {
+            console.error('비교 중 오류 발생:', error);
+            alert(`비교 검색 중 오류가 발생했습니다: ${error.message}`);
+        } finally {
+            compareBtn.textContent = '비교하기'; // 버튼 텍스트 '비교 시작'을 '비교하기'로 수정
+            compareBtn.disabled = false;
         }
-
-        // 2. 헤더 업데이트
-        thA.textContent = termA;
-        thB.textContent = termB;
-
-        // 3. 테이블 내용 초기화
-        compareTableBody.innerHTML = '';
-        
-        // 4. (가상의) 비교 데이터로 테이블 채우기
-        // 실제 AI 응답을 대체하는 임시 데이터입니다.
-        const mockCompareData = [
-            { category: '정의', a: `${termA}는 ${termA}의 원리와 기능을 기반으로 합니다.`, b: `${termB}는 ${termB}의 효율성을 개선한 기술입니다.` },
-            { category: '발명/개발 시기', a: '19세기 초반', b: '20세기 중반 이후' },
-            { category: '주요 작동 원리', a: '외연 기관 (증기 등)', b: '내연 기관 또는 효율적인 흐름 제어' },
-            { category: '효율성', a: '상대적으로 낮음', b: '상대적으로 매우 높음' },
-            { category: '주요 용도', a: '초기 산업 동력, 기차', b: '발전소, 항공기, 고속 선박' }
-        ];
-
-        mockCompareData.forEach(data => {
-            addCompareTableRow(data.category, data.a, data.b);
-        });
-        
-        // 5. 비교 요약 텍스트 업데이트 (임시)
-        document.getElementById('compare-summary-text').textContent = 
-            `"${termA}"와 "${termB}"의 가장 큰 차이점은 작동 원리(외연/내연)와 에너지 효율성입니다.`;
     }
+
+
+    // ===================================
+    // 6. 이벤트 리스너 연결
+    // ===================================
+    
+    // 6.1. SPA 내비게이션 버튼 이벤트 연결
+    navButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            handleNavClick(event.currentTarget);
+        });
+    });
+
+    // 6.2. 검색 및 비교 버튼 이벤트 연결
+    searchBtn.addEventListener('click', handleSearchClick); 
+    compareBtn.addEventListener('click', handleCompareClick); 
+
+    // 6.3. 즐겨찾기 버튼 이벤트 연결
+    saveFavoriteBtn.addEventListener('click', handleFavoriteClick);
+
+    // 6.4. 옵션 체크박스 이벤트 연결 (결과 카드 표시/숨김)
+    showStructureCheckbox.addEventListener('change', () => {
+        structureCard.classList.toggle('hidden', !showStructureCheckbox.checked);
+    });
+
+    showTimelineCheckbox.addEventListener('change', () => {
+        timelineCard.classList.toggle('hidden', !showTimelineCheckbox.checked);
+    });
+    
+    showRelatedCheckbox.addEventListener('change', () => {
+        relatedCard.classList.toggle('hidden', !showRelatedCheckbox.checked);
+    });
+
+    // 6.5. 초기 설정
+    // 초기 화면(home)에 해당하는 버튼을 활성화하고 뷰를 표시합니다.
+    const initialButton = document.querySelector('.nav-btn[data-view="home"]');
+    if (initialButton) {
+        handleNavClick(initialButton);
+    }
+    // 난이도 라디오 버튼 기본값 선택 (중급)
+    document.getElementById('level-intermediate').checked = true;
+
 });
