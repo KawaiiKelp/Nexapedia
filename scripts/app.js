@@ -25,10 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const compareBtn = document.getElementById('compare-btn');
     const compareAInput = document.getElementById('compare-a');
     const compareBInput = document.getElementById('compare-b');
-    const thA = document.getElementById('th-a'); 
-    const thB = document.getElementById('th-b'); 
+    const thA = document.getElementById('th-a');
+    const thB = document.getElementById('th-b');
     const compareTableBody = document.querySelector('#compare-table tbody');
-    const compareSummaryText = document.getElementById('compare-summary-text'); 
+    const compareSummaryText = document.getElementById('compare-summary-text');
 
     // 1.2. 단일 검색 기능 관련 요소
     const searchBtn = document.getElementById('search-btn');
@@ -39,16 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const levelBasicText = document.getElementById('level-basic-text');
     const levelIntermediateText = document.getElementById('level-intermediate-text');
     const levelAdvancedText = document.getElementById('level-advanced-text');
-    
+
     // 난이도 라디오 버튼 전체 선택
-    const levelRadios = document.querySelectorAll('input[name="level"]'); 
+    const levelRadios = document.querySelectorAll('input[name="level"]');
 
     // 1.3. 옵션 제어 관련 요소 (단일 검색 결과의 보조 카드)
     const structureCard = document.getElementById('structure-card');
+
+    // 🚨 수정: 'diagram-container' 대신 'structure-graph' ID를 사용합니다.
+    const diagramContainer = document.getElementById('structure-graph');
+
+    const chipListElement = document.getElementById('related-list');
     const timelineCard = document.getElementById('timeline-card');
-    const relatedCard = document.getElementById('related-card'); // 연관 개념 카드
-    // ✅ 수정: HTML의 id="related-list"에 맞춰 DOM 요소를 가져옵니다.
-    const chipListElement = document.getElementById('related-list'); 
+    const relatedCard = document.getElementById('related-card'); // 이전 단계에서 추가한 변수
 
     // 옵션 체크박스
     const showStructureCheckbox = document.getElementById('opt-diagram');
@@ -107,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeFavorite(queryToRemove) {
-        let favorites = getLocalStorage(FAVORITE_KEY, []); 
+        let favorites = getLocalStorage(FAVORITE_KEY, []);
         favorites = favorites.filter(item => item !== queryToRemove);
         setLocalStorage(FAVORITE_KEY, favorites);
         alert(`"${queryToRemove}"가 즐겨찾기에서 제거되었습니다.`);
@@ -121,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createHistoryListItem(query, isFavorite = false) {
         const li = document.createElement('li');
         li.classList.add('history-item');
-        
+
         li.innerHTML = `
             <span class="history-query">${query}</span>
             ${isFavorite
@@ -168,6 +171,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function renderTimeline(timelineData) {
+        const timelineContainer = document.getElementById('timeline-container');
+        if (!timelineData || timelineData.length === 0 || !timelineContainer) {
+            timelineCard.classList.add('hidden');
+            return;
+        }
+
+        timelineContainer.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.classList.add('timeline-list'); // CSS 스타일을 위해 클래스 추가
+
+        timelineData.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${item.year}:</strong> ${item.event}`;
+            ul.appendChild(li);
+        });
+
+        timelineContainer.appendChild(ul);
+        timelineCard.classList.remove('hidden');
+    }
+
     function handleFavoriteClick() {
         const query = queryInput.value.trim();
         if (!query) {
@@ -187,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setLocalStorage(FAVORITE_KEY, favorites);
-        updateFavoriteButtonState(query); 
+        updateFavoriteButtonState(query);
     }
 
     // ===================================
@@ -199,15 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function handleNavClick(clickedButton) {
         // ✅ 안전 장치 추가: 버튼이 null일 경우 에러 방지
-        if (!clickedButton) return; 
+        if (!clickedButton) return;
 
         // 1. 버튼 활성 클래스 처리
         navButtons.forEach(btn => btn.classList.remove('active'));
         clickedButton.classList.add('active');
-        
+
         // 2. 뷰 전환 로직
         const viewName = clickedButton.getAttribute('data-view');
-        
+
         // 모든 뷰 숨김
         viewIds.forEach(id => {
             const viewElement = document.getElementById(id);
@@ -216,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 타겟 뷰 표시
         const targetViewId = (viewName === 'home') ? 'welcome-view' : viewName + '-view';
-        
+
         const targetView = document.getElementById(targetViewId);
         if (targetView) {
             targetView.classList.remove('hidden');
@@ -249,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.related && data.related.length > 0) {
             data.related.forEach(concept => {
                 // ✅ 수정: 'const'를 추가하여 변수를 명확히 선언
-                const chip = document.createElement('li'); 
+                const chip = document.createElement('li');
                 chip.classList.add('chip');
                 chip.textContent = concept;
                 chip.addEventListener('click', () => {
@@ -279,7 +303,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resultView) {
             resultView.classList.remove('hidden');
         }
+
+        // ✅ 추가: 다이어그램 렌더링 처리
+        if (data.diagramCode) {
+            renderDiagram(data.diagramCode);
+        } else {
+            // 코드가 없으면 카드 숨김
+            structureCard.classList.add('hidden');
+        }
         
+        // ✅ 타임라인 렌더링 처리 추가
+        if (data.timeline && showTimelineCheckbox.checked) {
+            renderTimeline(data.timeline);
+        } else {
+            timelineCard.classList.add('hidden');
+        }
+
         // 기록 업데이트 및 버튼 상태 업데이트
         addSearchHistory(query);
         updateFavoriteButtonState(query);
@@ -298,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 테이블 본문 업데이트
         compareTableBody.innerHTML = '';
-        
+
         // 데이터가 없을 경우 플레이스홀더 표시
         if (!data.comparison || data.comparison.length === 0) {
             compareTableBody.innerHTML = `
@@ -318,19 +357,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 compareTableBody.appendChild(tr);
             });
         }
-        
+
         // 뷰 전환: 비교 화면 표시
         handleNavClick(document.querySelector('.nav-btn[data-view="compare"]'));
     }
 
+    /**
+ * Mermaid 코드를 받아와 다이어그램 컨테이너에 렌더링합니다.
+ * @param {string} code - Mermaid 다이어그램 코드
+ */
+    function renderDiagram(code) {
+        if (!code || !diagramContainer) return;
+
+        // 1. 다이어그램 컨테이너 초기화
+        diagramContainer.innerHTML = '';
+
+        // 2. Mermaid 코드를 담을 div 요소 생성 (클래스가 필수입니다)
+        const diagramDiv = document.createElement('div');
+        diagramDiv.classList.add('mermaid');
+
+        // 3. 코드 삽입
+        diagramDiv.textContent = code;
+        diagramContainer.appendChild(diagramDiv);
+
+        // 4. Mermaid 렌더링 요청
+        // mermaid.init()을 사용하면 됩니다.
+        mermaid.init(undefined, diagramDiv);
+
+        // 5. 구조도 카드를 표시합니다.
+        structureCard.classList.remove('hidden');
+    }
 
     // ===================================
     // 5. 검색 및 비교 이벤트 핸들러 (AI 연동)
     // ===================================
-    
-    /** * [✅ AI 연동 로직 복구] 
-     * 단일 개념 검색을 처리하고 결과를 렌더링합니다.
-     */
+
+    /**
+ * 단일 개념 검색을 처리하고 결과를 렌더링합니다.
+ */
     async function handleSearchClick() {
         const query = queryInput.value.trim();
         if (!query) {
@@ -338,21 +402,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // ✅ 추가: 선택된 난이도(level) 값을 가져옵니다.
+        const selectedLevel = document.querySelector('input[name="level"]:checked').value;
+
         searchBtn.textContent = '검색 중...';
         searchBtn.disabled = true;
 
         try {
-            // =======================================================
-            // 💡 AI Backend API 호출 (Fetch API) 로직
-            // =======================================================
-            const response = await fetch('/api/search', {
+            const response = await fetch('http://localhost:3000/api/search', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    query: query 
-                    // 난이도 정보: document.querySelector('input[name="level"]:checked').value
+                body: JSON.stringify({
+                    query: query,
+                    // ✅ 수정: 난이도 값을 body에 추가하여 백엔드로 전송
+                    level: selectedLevel
                 })
             });
 
@@ -362,14 +427,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            
+
             // 데이터 렌더링
             renderResult(query, data);
 
         } catch (error) {
             console.error('검색 중 오류 발생:', error);
             // 백엔드가 없을 경우 다시 이 메시지가 표시됩니다.
-            alert(`검색 중 오류가 발생했습니다: ${error.message}.`); 
+            alert(`검색 중 오류가 발생했습니다: ${error.message}.`);
         } finally {
             searchBtn.textContent = '검색';
             searchBtn.disabled = false;
@@ -401,9 +466,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    conceptA: queryA, 
-                    conceptB: queryB 
+                body: JSON.stringify({
+                    conceptA: queryA,
+                    conceptB: queryB
                 })
             });
 
@@ -412,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            
+
             // 데이터 렌더링
             renderCompareResult(queryA, queryB, data);
 
@@ -429,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // 6. 이벤트 리스너 연결
     // ===================================
-    
+
     // 6.1. SPA 내비게이션 버튼 이벤트 연결
     navButtons.forEach(button => {
         button.addEventListener('click', (event) => {
@@ -438,8 +503,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 6.2. 검색 및 비교 버튼 이벤트 연결
-    searchBtn.addEventListener('click', handleSearchClick); 
-    compareBtn.addEventListener('click', handleCompareClick); 
+    searchBtn.addEventListener('click', handleSearchClick);
+    compareBtn.addEventListener('click', handleCompareClick);
 
     // 6.3. 즐겨찾기 버튼 이벤트 연결
     saveFavoriteBtn.addEventListener('click', handleFavoriteClick);
@@ -452,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showTimelineCheckbox.addEventListener('change', () => {
         timelineCard.classList.toggle('hidden', !showTimelineCheckbox.checked);
     });
-    
+
     showRelatedCheckbox.addEventListener('change', () => {
         relatedCard.classList.toggle('hidden', !showRelatedCheckbox.checked);
     });

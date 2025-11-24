@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +8,16 @@
   <link rel="shortcut icon" href="images/nexapedia_favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="./css/style.css" />
 </head>
+
 <body>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    // 라이브러리가 로드된 후 initialize가 실행되어야 합니다.
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default'
+    });
+  </script>
   <!-- 헤더 -->
   <header class="app-header">
     <div class="logo">
@@ -33,11 +43,7 @@
       <section class="panel" id="search-panel">
         <h2>개념 검색</h2>
         <label for="query-input" class="field-label">검색어</label>
-        <input
-          id="query-input"
-          type="text"
-          placeholder="예: 증기기관, 플루토늄, 열역학 제2법칙"
-        />
+        <input id="query-input" type="text" placeholder="예: 증기기관, 플루토늄, 열역학 제2법칙" />
 
         <label class="field-label">설명 난이도</label>
         <div class="level-group">
@@ -158,6 +164,15 @@
         </section>
       </section>
 
+      <section class="card hidden" id="timeline-card">
+        <h3>타임라인 / 역사</h3>
+        <div id="timeline-container">
+          <p class="placeholder">
+            개념의 발전 과정이나 역사적 흐름이 여기에 표시됩니다.
+          </p>
+        </div>
+      </section>
+
       <!-- 비교 결과 -->
       <section id="compare-view" class="result-view hidden">
         <header class="result-header">
@@ -230,4 +245,5 @@
 
   <script src="scripts/app.js"></script>
 </body>
+
 </html>
