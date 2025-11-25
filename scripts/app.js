@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // LocalStorage Key 상수
     const HISTORY_KEY = 'nexapediaHistory';
     const FAVORITE_KEY = 'nexapediaFavorites';
+    const OPTIONS_KEY = 'nexapediaOptions';
 
     // 1.1. 비교 기능 관련 요소
     const compareBtn = document.getElementById('compare-btn');
@@ -62,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const recentList = document.getElementById('recent-list');
     const favoriteList = document.getElementById('favorite-list');
     const saveFavoriteBtn = document.getElementById('save-favorite-btn');
+
+    const loadingOverlay = document.getElementById('loading-overlay');
 
     // ===================================
     // 2. 검색 기록 및 즐겨찾기 관리 유틸리티
@@ -215,7 +218,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================
-    // 3. SPA 뷰 전환 로직
+    // 3. 옵션 설정 저장/불러오기 유틸리티 (🚨 추가된 섹션)
+    // ===================================
+
+    /**
+     * 현재 옵션 체크박스 상태를 localStorage에 저장합니다.
+     */
+    function saveOptions() {
+        const options = {
+            showStructure: showStructureCheckbox.checked,
+            showTimeline: showTimelineCheckbox.checked,
+            showRelated: showRelatedCheckbox.checked,
+        };
+        localStorage.setItem(OPTIONS_KEY, JSON.stringify(options));
+    }
+
+    /**
+     * localStorage에서 옵션 상태를 불러와 체크박스에 적용합니다.
+     */
+    function loadOptions() {
+        const storedOptions = localStorage.getItem(OPTIONS_KEY);
+        if (!storedOptions) return; // 저장된 옵션이 없으면 종료
+
+        try {
+            const options = JSON.parse(storedOptions);
+
+            // 1. 체크박스 상태 복원
+            showStructureCheckbox.checked = options.showStructure ?? true; // 기본값: true
+            showTimelineCheckbox.checked = options.showTimeline ?? true;
+            showRelatedCheckbox.checked = options.showRelated ?? true;
+
+            // 2. 해당 결과 카드 가시성 초기 설정
+            structureCard.classList.toggle('hidden', !showStructureCheckbox.checked);
+            timelineCard.classList.toggle('hidden', !showTimelineCheckbox.checked);
+            relatedCard.classList.toggle('hidden', !showRelatedCheckbox.checked);
+
+        } catch (e) {
+            console.error("옵션 불러오기 오류:", e);
+            localStorage.removeItem(OPTIONS_KEY); // 오류 발생 시 저장된 값 삭제
+        }
+    }
+
+    // ===================================
+    // 4. SPA 뷰 전환 로직
     // ===================================
 
     /**
@@ -253,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================
-    // 4. 데이터 렌더링 로직
+    // 5. 데이터 렌더링 로직
     // ===================================
 
     /**
@@ -311,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 코드가 없으면 카드 숨김
             structureCard.classList.add('hidden');
         }
-        
+
         // ✅ 타임라인 렌더링 처리 추가
         if (data.timeline && showTimelineCheckbox.checked) {
             renderTimeline(data.timeline);
@@ -363,9 +408,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
- * Mermaid 코드를 받아와 다이어그램 컨테이너에 렌더링합니다.
- * @param {string} code - Mermaid 다이어그램 코드
- */
+     * Mermaid 코드를 받아와 다이어그램 컨테이너에 렌더링합니다.
+     * @param {string} code - Mermaid 다이어그램 코드
+     */
     function renderDiagram(code) {
         if (!code || !diagramContainer) return;
 
@@ -389,12 +434,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================
-    // 5. 검색 및 비교 이벤트 핸들러 (AI 연동)
+    // 6. 검색 및 비교 이벤트 핸들러 (AI 연동)
     // ===================================
 
+    function showLoading() {
+        if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }
+
     /**
- * 단일 개념 검색을 처리하고 결과를 렌더링합니다.
- */
+     * 단일 개념 검색을 처리하고 결과를 렌더링합니다.
+     */
     async function handleSearchClick() {
         const query = queryInput.value.trim();
         if (!query) {
@@ -404,6 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ✅ 추가: 선택된 난이도(level) 값을 가져옵니다.
         const selectedLevel = document.querySelector('input[name="level"]:checked').value;
+
+        showLoading();
 
         searchBtn.textContent = '검색 중...';
         searchBtn.disabled = true;
@@ -438,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             searchBtn.textContent = '검색';
             searchBtn.disabled = false;
+            hideLoading();
         }
     }
 
@@ -453,6 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('비교할 두 개의 개념을 모두 입력해 주세요.');
             return;
         }
+
+        showLoading();
 
         compareBtn.textContent = '비교 중...';
         compareBtn.disabled = true;
@@ -487,42 +545,46 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             compareBtn.textContent = '비교하기'; // 버튼 텍스트 '비교 시작'을 '비교하기'로 수정
             compareBtn.disabled = false;
+            hideLoading();
         }
     }
 
 
     // ===================================
-    // 6. 이벤트 리스너 연결
+    // 7. 이벤트 리스너 연결
     // ===================================
 
-    // 6.1. SPA 내비게이션 버튼 이벤트 연결
+    // 7.1. SPA 내비게이션 버튼 이벤트 연결
     navButtons.forEach(button => {
         button.addEventListener('click', (event) => {
             handleNavClick(event.currentTarget);
         });
     });
 
-    // 6.2. 검색 및 비교 버튼 이벤트 연결
+    // 7.2. 검색 및 비교 버튼 이벤트 연결
     searchBtn.addEventListener('click', handleSearchClick);
     compareBtn.addEventListener('click', handleCompareClick);
 
-    // 6.3. 즐겨찾기 버튼 이벤트 연결
+    // 7.3. 즐겨찾기 버튼 이벤트 연결
     saveFavoriteBtn.addEventListener('click', handleFavoriteClick);
 
-    // 6.4. 옵션 체크박스 이벤트 연결 (결과 카드 표시/숨김)
+    // 7.4. 옵션 체크박스 이벤트 연결 (결과 카드 표시/숨김)
     showStructureCheckbox.addEventListener('change', () => {
         structureCard.classList.toggle('hidden', !showStructureCheckbox.checked);
+        saveOptions();
     });
 
     showTimelineCheckbox.addEventListener('change', () => {
         timelineCard.classList.toggle('hidden', !showTimelineCheckbox.checked);
+        saveOptions();
     });
 
     showRelatedCheckbox.addEventListener('change', () => {
         relatedCard.classList.toggle('hidden', !showRelatedCheckbox.checked);
+        saveOptions();
     });
 
-    // 6.5. 초기 설정
+    // 7.5. 초기 설정
     // 초기 화면(home)에 해당하는 버튼을 활성화하고 뷰를 표시합니다.
     const initialButton = document.querySelector('.nav-btn[data-view="home"]');
     if (initialButton) {

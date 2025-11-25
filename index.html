@@ -37,6 +37,10 @@
 
   <!-- 메인 레이아웃 -->
   <main class="layout">
+    <div id="loading-overlay" class="hidden">
+      <div class="spinner"></div>
+      <p>AI가 답변을 생성 중입니다...</p>
+    </div>
     <!-- 왼쪽: 검색 / 옵션 -->
     <aside class="sidebar">
       <!-- 단일 개념 검색 -->
@@ -162,15 +166,16 @@
             <!-- JS로 관련 키워드 chip 형태로 추가 -->
           </ul>
         </section>
-      </section>
 
-      <section class="card hidden" id="timeline-card">
-        <h3>타임라인 / 역사</h3>
-        <div id="timeline-container">
-          <p class="placeholder">
-            개념의 발전 과정이나 역사적 흐름이 여기에 표시됩니다.
-          </p>
-        </div>
+        <!-- 타임라인 / 역사 -->
+        <section class="card hidden" id="timeline-card">
+          <h3>타임라인 / 역사</h3>
+          <div id="timeline-container">
+            <p class="placeholder">
+              개념의 발전 과정이나 역사적 흐름이 여기에 표시됩니다.
+            </p>
+          </div>
+        </section>
       </section>
 
       <!-- 비교 결과 -->
